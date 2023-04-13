@@ -1,0 +1,60 @@
+version: '3.4'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.9.14-management
+    #ports:
+    #- "15672:15672"
+    #- "5672:5672"
+
+  node-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+    environment:
+      - QUEUE_NAME=hello_queue
+      - PUBLISHER=true
+      - SUBSCRIBER=true
+      - HOSTNAME=rabbitmq
+      - CONTAINER_NAME=NODE-1
+
+  node-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+    environment:
+      - QUEUE_NAME=hello_queue
+      - PUBLISHER=true
+      - SUBSCRIBER=true
+      - HOSTNAME=rabbitmq
+      - CONTAINER_NAME=NODE-2
+
+  node-3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+    environment:
+      - QUEUE_NAME=hello_queue
+      - PUBLISHER=true
+      - SUBSCRIBER=true
+      - HOSTNAME=rabbitmq
+      - CONTAINER_NAME=NODE-3
+
+  node-4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+    environment:
+      - QUEUE_NAME=hello_queue
+      - PUBLISHER=true
+      - SUBSCRIBER=true
+      - HOSTNAME=rabbitmq
+      - CONTAINER_NAME=NODE-4
