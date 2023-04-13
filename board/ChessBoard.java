@@ -8,11 +8,39 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+// import com.rabbitmq.client.Channel;
+// import com.rabbitmq.client.Connection;
+// import com.rabbitmq.client.ConnectionFactory;
+// import com.rabbitmq.client.DeliverCallback;
 
 import board.PlayerIcon;
 
 public class ChessBoard {
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
+
+    // ConnectionFactory factory = new ConnectionFactory();
+    // factory.setHost("localhost");
+    // Connection connection = factory.newConnection();
+    // Channel channel = connection.createChannel();
+
+    // channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+    // System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+    // DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+    // String message = new String(delivery.getBody(), "UTF-8");
+    // System.out.println(" [x] Received '" + message + "'");
+    // updateBoard();
+    // };
+    // channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {
+    // });
+    while (true) {
+      System.out.println("Updating board...");
+      updateBoard();
+      Thread.sleep(1000);
+    }
+  }
+
+  public static void updateBoard() {
     JFrame frame = new JFrame("Chess Board");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -25,7 +53,6 @@ public class ChessBoard {
     ImageIcon icon2 = PlayerIcon.getScaledImage("img/smiley2.png", 50);
     ImageIcon icon3 = PlayerIcon.getScaledImage("img/smiley3.png", 50);
     ImageIcon icon4 = PlayerIcon.getScaledImage("img/smiley4.png", 50);
-
     for (int i = 0; i < 4; i++) {
       JPanel chessBoard = new JPanel(new GridLayout(nRows, nCols));
       chessBoard.setPreferredSize(new Dimension(400, 400)); // Set preferred size of chess board
