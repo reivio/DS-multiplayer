@@ -53,22 +53,24 @@ public class Node {
         // Bind to all exchanges with the pattern "*_exchange.#"
         channel.queueDeclare(containerName, false, false, false, null);
 
-        for (String neighborNode : neighborNodes) {
-            channel.queueBind(containerName, EXCHANGE_NAME, neighborNode);
+        for (String node : allNodes) {
+            channel.queueBind(containerName, EXCHANGE_NAME, node);
         }
 
         // declare a mutable variable to keep track of the number of messages
         // Start consuming messages from the queue
         String consumerTag = channel.basicConsume(containerName, true, (tag, delivery) -> {
             String msg = new String(delivery.getBody(), "UTF-8");
-            addOtherPlayer(msg);
             String routingKey = delivery.getEnvelope().getRoutingKey();
+            if (!routingKey.equals(containerName)) {
+                addOtherPlayer(msg);
+            }
             // System.out.println("Received message '" + msg + "' from exchange " +
             // EXCHANGE_NAME + " with routing key "
             // + routingKey);
 
             try {
-                Thread.sleep(500);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -191,6 +193,8 @@ public class Node {
                 ownPlayers.add(pos);
                 // otherPlayers.remove(pos);
                 System.out.println(pos.name + " moved to into this board  (" + pos.board + ")");
+            } else {
+                newOtherPlayers.add(pos);
             }
         }
         otherPlayers = newOtherPlayers;
