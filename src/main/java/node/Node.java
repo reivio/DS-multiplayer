@@ -15,7 +15,7 @@ import java.util.Random;
 import node.Player;
 
 public class Node {
-    private static final int BOARD_SIZE = 8;
+    private static final int BOARD_SIZE = 5;
     private static final int NUM_BOARDS = 4;
     private static final String EXCHANGE_NAME = "direct-msg";
     private static final String STATUS_ROUTING_KEY = ".status";
@@ -70,7 +70,7 @@ public class Node {
             // + routingKey);
 
             try {
-                Thread.sleep(200);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -85,6 +85,9 @@ public class Node {
                     System.out.println("Publishing player: " + player.toString());
                     channel.basicPublish(EXCHANGE_NAME, containerName, null, player.toString().getBytes("UTF-8"));
                 }
+
+                // !!!!!!!!!!!!!!!!!!!!!!!!Moved update!!!!!!!!!!!!!!!!!
+
                 // channel.basicPublish(EXCHANGE_NAME, containerName, null,
                 // ownMessage.getBytes("UTF-8"));
                 msgIteration = 0;
@@ -119,9 +122,12 @@ public class Node {
             }
         }
 
+        int colPos = (pos.board % 2) * BOARD_SIZE + pos.col;
+        int rowPos = (pos.board / 2) * BOARD_SIZE + pos.row;
         for (Player badPos : badPieces) {
-            if (badPos.board == pos.board && (Math.abs(badPos.row - pos.row) <= 1)
-                    && (Math.abs(badPos.col - pos.col) <= 1)) {
+            int colBad = (badPos.board % 2) * BOARD_SIZE + badPos.col;
+            int rowBad = (badPos.board / 2) * BOARD_SIZE + badPos.row;
+            if ((Math.abs(rowBad - rowPos) <= 1) && (Math.abs(colBad - colPos) <= 1)) {
                 return false;
             }
         }
@@ -145,22 +151,43 @@ public class Node {
 
                     // Crossing over to a neighboring board
                     if (newPos.row < 0) {
+                        if (newPos.board == 0 || newPos.board == 1) {
+                            continue;
+                        }
                         newPos.row = BOARD_SIZE - 1;
                         newPos.board = (newPos.board + 2) % NUM_BOARDS;
                     } else if (newPos.row >= BOARD_SIZE) {
+                        if (newPos.board == 2 || newPos.board == 3) {
+                            continue;
+                        }
                         newPos.row = 0;
                         newPos.board = (newPos.board + 2) % NUM_BOARDS;
                     } else if (newPos.col < 0) {
+                        if (newPos.board == 0 || newPos.board == 2) {
+                            continue;
+                        }
                         newPos.col = BOARD_SIZE - 1;
                         newPos.board = (newPos.board + 1) % NUM_BOARDS;
                     } else if (newPos.col >= BOARD_SIZE) {
+                        if (newPos.board == 1 || newPos.board == 3) {
+                            continue;
+                        }
                         newPos.col = 0;
                         newPos.board = (newPos.board + 1) % NUM_BOARDS;
                     }
 
                     if (isValidMove(newPos, positions, badPieces)) {
                         // TODO : check availability against newly found legal moves
-                        candidates.add(newPos);
+                        Boolean spaceIsFree = true;
+                        for (Player legal : legalMoves) {
+                            if (legal.board == pos.board && legal.row == pos.row && legal.col == pos.col) {
+                                spaceIsFree = false;
+                                break;
+                            }
+                        }
+                        if (spaceIsFree) {
+                            candidates.add(newPos);
+                        }
                     }
                 }
             }
@@ -171,9 +198,18 @@ public class Node {
                 legalMoves.add(pos); // If there are no legal moves, stay in the same position
             }
         }
-
+        // add assert that legalMoves.size() == positions.size()
+        assert legalMoves.size() == positions.size();
         return legalMoves;
     }
+
+    // public static List<Player> getNextMoves(List<Player> positions, List<Player>
+    // badPieces) {
+
+    // List<Player> nextlMoves = new ArrayList<>();
+    // int limit = 2 * BOARD_SIZE;
+
+    // }
 
     public static void updatePlayerLists(List<Player> own, List<Player> other) {
         List<Player> newOwnPlayers = new ArrayList<>();
