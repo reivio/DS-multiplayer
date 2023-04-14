@@ -51,7 +51,7 @@ public class ChessBoard {
     frame.setVisible(true);
 
     String containerName = "listener";
-    List<String> allNodes = Arrays.asList("NODE-1", "NODE-2", "NODE-3", "NODE-4");
+    List<String> allNodes = Arrays.asList("NODE-0", "NODE-1", "NODE-2", "NODE-3");
 
     // Create a new connection to RabbitMQ
     ConnectionFactory factory = new ConnectionFactory();
@@ -134,7 +134,7 @@ public class ChessBoard {
                 GridBagConstraints.CENTER,
                 GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
-            JLabel pawnLabel = new JLabel(icon1);
+            // JLabel pawnLabel = new JLabel(icon1);
             // boardPanel.add(pawnLabel);
             // boardPanel.add(pawnLabel, new GridBagConstraints(y, x, 1, 1, 0, 0,
             // GridBagConstraints.CENTER,
@@ -148,14 +148,13 @@ public class ChessBoard {
             for (Player player : players) {
               if (player.getBoard() == idx && player.getRow() == x && player.getCol() == y) {
                 System.out.println("Adding pawn to board " + idx + " at " + x + " " + y + " " + player.getName());
-                if (player.getName().equals("player.1")) {
-                  System.out.println("Adding pawn to board " + idx + " at " + x + "--------------- " + y);
+                if (player.getName().equals("player.0")) {
                   squareLabel.setIcon(icon1);
-                } else if (player.getName().equals("player.2")) {
+                } else if (player.getName().equals("player.1")) {
                   squareLabel.setIcon(icon2);
-                } else if (player.getName().equals("player.3")) {
+                } else if (player.getName().equals("player.2")) {
                   squareLabel.setIcon(icon3);
-                } else if (player.getName().equals("player.4")) {
+                } else if (player.getName().equals("player.3")) {
                   squareLabel.setIcon(icon4);
                 }
               }

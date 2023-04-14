@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.channels.CancelledKeyException;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -32,7 +33,7 @@ public class Node {
         nodeNumber = Integer.parseInt(containerName.substring(containerName.length() - 1));
         System.out.println("Node number: " + nodeNumber);
 
-        List<String> allNodes = Arrays.asList("NODE-1", "NODE-2", "NODE-3", "NODE-4");
+        List<String> allNodes = Arrays.asList("NODE-0", "NODE-1", "NODE-2", "NODE-3");
         List<String> neighborNodes = new ArrayList<>();
         for (String node : allNodes) {
             if (node.equals(containerName)) {
@@ -62,15 +63,22 @@ public class Node {
         String consumerTag = channel.basicConsume(containerName, true, (tag, delivery) -> {
             String msg = new String(delivery.getBody(), "UTF-8");
             String routingKey = delivery.getEnvelope().getRoutingKey();
-            if (!routingKey.equals(containerName)) {
-                addOtherPlayer(msg);
+
+            // Delegate players to the correct list
+
+            Player receivedPlayer = Player.fromString(msg);
+            if (receivedPlayer.getBoard() == (nodeNumber)) {
+                ownPlayers.add(receivedPlayer);
+            } else {
+                otherPlayers.add(receivedPlayer);
             }
-            // System.out.println("Received message '" + msg + "' from exchange " +
-            // EXCHANGE_NAME + " with routing key "
-            // + routingKey);
+
+            // if (!routingKey.equals(containerName)) {
+            // addOtherPlayer(msg);
+            // }
 
             try {
-                Thread.sleep(1000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -78,10 +86,14 @@ public class Node {
             // String ownQueue = QUEUE_NAME_PREFIX + System.getenv("HOSTNAME");
             String ownMessage = "Hello from " + containerName; // System.getenv("HOSTNAME");
             msgIteration++;
-            if (msgIteration == 3) {
-                updatePlayerLists(ownPlayers, otherPlayers);
-                ownPlayers = getRandomLegalMoves(ownPlayers, otherPlayers);
-                for (Player player : ownPlayers) {
+            // if (msgIteration == 3) {
+            if (ownPlayers.size() + otherPlayers.size() == 4) {
+                // updatePlayerLists(ownPlayers, otherPlayers);
+                List<Player> tempOwnPlayers = ownPlayers;
+                List<Player> tempOtherPlayers = otherPlayers;
+
+                tempOwnPlayers = getRandomLegalMoves(tempOwnPlayers, tempOtherPlayers);
+                for (Player player : tempOwnPlayers) {
                     System.out.println("Publishing player: " + player.toString());
                     channel.basicPublish(EXCHANGE_NAME, containerName, null, player.toString().getBytes("UTF-8"));
                 }
@@ -92,6 +104,7 @@ public class Node {
                 // ownMessage.getBytes("UTF-8"));
                 msgIteration = 0;
                 otherPlayers.clear();
+                ownPlayers.clear();
                 // players.remove("123");
             }
         }, tag -> {
@@ -99,9 +112,9 @@ public class Node {
         System.out.println("Subscribed to all messages on all topics with consumer tag " + consumerTag);
 
         // initial player position
-        Player player = new Player("player." + Integer.toString(nodeNumber), nodeNumber - 1, 2, 2);
+        Player player = new Player("player." + Integer.toString(nodeNumber), nodeNumber, 2, 2);
         System.out.println("Initial player position: " + player.toString());
-        ownPlayers.add(player);
+        // ownPlayers.add(player);
         channel.basicPublish(EXCHANGE_NAME, containerName, null, player.toString().getBytes("UTF-8"));
     }
 
@@ -135,6 +148,31 @@ public class Node {
         return pos.row >= 0 && pos.row < BOARD_SIZE && pos.col >= 0 && pos.col < BOARD_SIZE;
     }
 
+    // public static List<Player> getNextMoves(List<Player> players, List<Player>
+    // neighbors) {
+    // List<Player> nextMoves = new ArrayList<>();
+
+    // for (Player player : players) {
+    // int x = (player.board % 2) * BOARD_SIZE + player.col;
+    // int y = (player.board / 2) * BOARD_SIZE + player.row;
+    // for (int dr = -1; dr <= 1; dr++) {
+    // for (int dc = -1; dc <= 1; dc++) {
+    // if (dr * dc != 0 || (dr == 0 && dc == 0)) {
+    // continue;
+    // }
+    // int col = y + dc;
+    // int row = x + dr;
+
+    // if (row < 0 || row >= BOARD_SIZE * 2 || col < 0 || col >= BOARD_SIZE * 2) {
+    // continue;
+    // }
+
+    // }
+
+    // }
+    // }
+    // }
+
     public static List<Player> getRandomLegalMoves(List<Player> positions, List<Player> badPieces) {
         List<Player> legalMoves = new ArrayList<>();
         Random random = new Random();
@@ -156,19 +194,22 @@ public class Node {
                         }
                         newPos.row = BOARD_SIZE - 1;
                         newPos.board = (newPos.board + 2) % NUM_BOARDS;
-                    } else if (newPos.row >= BOARD_SIZE) {
+                    }
+                    if (newPos.row >= BOARD_SIZE) {
                         if (newPos.board == 2 || newPos.board == 3) {
                             continue;
                         }
                         newPos.row = 0;
                         newPos.board = (newPos.board + 2) % NUM_BOARDS;
-                    } else if (newPos.col < 0) {
+                    }
+                    if (newPos.col < 0) {
                         if (newPos.board == 0 || newPos.board == 2) {
                             continue;
                         }
                         newPos.col = BOARD_SIZE - 1;
                         newPos.board = (newPos.board + 1) % NUM_BOARDS;
-                    } else if (newPos.col >= BOARD_SIZE) {
+                    }
+                    if (newPos.col >= BOARD_SIZE) {
                         if (newPos.board == 1 || newPos.board == 3) {
                             continue;
                         }
@@ -200,6 +241,10 @@ public class Node {
         }
         // add assert that legalMoves.size() == positions.size()
         assert legalMoves.size() == positions.size();
+
+        // if (nodeNumber != 0) {
+        // return positions;
+        // }
         return legalMoves;
     }
 

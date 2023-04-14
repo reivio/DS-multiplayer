@@ -1,6 +1,6 @@
 package node;
 
-class Player {
+public class Player {
     String name;
     int board, row, col;
 
@@ -27,4 +27,21 @@ class Player {
         int col = Integer.parseInt(parts[3]);
         return new Player(name, board, row, col);
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getBoard() {
+        return board;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
 }
